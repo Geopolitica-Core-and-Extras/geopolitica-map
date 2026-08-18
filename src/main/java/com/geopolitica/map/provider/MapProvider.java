@@ -22,6 +22,20 @@ public interface MapProvider {
      */
     boolean tryEnable(GeopoliticaMapPlugin plugin);
 
+    /**
+     * Proactively creates/registers this provider's layer (marker set) for
+     * every world the backing map plugin currently knows about, independent
+     * of whether any claim marker has been drawn yet - a layer with zero
+     * markers must still show up as a toggle in the map's UI.
+     *
+     * <p>Called redundantly at several points (right after {@link #tryEnable},
+     * on a short delayed retry, before every periodic resync, and whenever a
+     * world loads) specifically to survive the backing map plugin not having
+     * finished initializing its own per-world state yet when we first hook
+     * in. Idempotent and cheap to call repeatedly. Must never throw.</p>
+     */
+    void ensureLayers(GeopoliticaMapPlugin plugin);
+
     /** Removes every marker this provider has drawn and releases its hook. Must never throw. */
     void disable();
 

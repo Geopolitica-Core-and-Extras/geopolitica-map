@@ -48,6 +48,21 @@ public class Pl3xMapProvider implements MapProvider {
     }
 
     @Override
+    public void ensureLayers(GeopoliticaMapPlugin plugin) {
+        try {
+            // Registers (or leaves alone, if already present) the "Geopolitica" layer on
+            // every world Pl3xMap currently knows about - even ones with no claims yet -
+            // so the layer toggle is visible in the UI regardless of how many markers
+            // are actually drawn on it right now.
+            for (World world : Pl3xMap.api().getWorldRegistry()) {
+                ensureLayer(world);
+            }
+        } catch (Throwable ignored) {
+            // Pl3xMap not fully ready yet - the next redundant call will pick this back up.
+        }
+    }
+
+    @Override
     public void disable() {
         try {
             for (World world : Pl3xMap.api().getWorldRegistry()) {
@@ -96,19 +111,23 @@ public class Pl3xMapProvider implements MapProvider {
             if (world == null) {
                 return null;
             }
-            Registry<Layer> registry = world.getLayerRegistry();
-            if (registry.has(LAYER_KEY)) {
-                return (SimpleLayer) registry.get(LAYER_KEY);
-            }
-            SimpleLayer layer = new SimpleLayer(LAYER_KEY, () -> "Geopolitica");
-            layer.setShowControls(true);
-            layer.setDefaultHidden(false);
-            layer.setPriority(2);
-            registry.register(LAYER_KEY, layer);
-            return layer;
+            return ensureLayer(world);
         } catch (Throwable t) {
             return null;
         }
+    }
+
+    private SimpleLayer ensureLayer(World world) {
+        Registry<Layer> registry = world.getLayerRegistry();
+        if (registry.has(LAYER_KEY)) {
+            return (SimpleLayer) registry.get(LAYER_KEY);
+        }
+        SimpleLayer layer = new SimpleLayer(LAYER_KEY, () -> "Geopolitica");
+        layer.setShowControls(true);
+        layer.setDefaultHidden(false);
+        layer.setPriority(2);
+        registry.register(LAYER_KEY, layer);
+        return layer;
     }
 
     private static int withAlpha(java.awt.Color color, double opacity) {

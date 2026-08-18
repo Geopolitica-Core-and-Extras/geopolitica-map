@@ -57,6 +57,23 @@ public class BlueMapProvider implements MapProvider {
     }
 
     @Override
+    public void ensureLayers(GeopoliticaMapPlugin plugin) {
+        BlueMapAPI current = this.api;
+        if (current == null) {
+            // Not ready yet (BlueMap's own world/map setup is asynchronous) - re-check
+            // in case onEnable() already fired before we registered the listener above.
+            BlueMapAPI.getInstance().ifPresent(a -> this.api = a);
+            current = this.api;
+        }
+        if (current == null) {
+            return;
+        }
+        for (BlueMapMap map : current.getMaps()) {
+            map.getMarkerSets().computeIfAbsent(SET_ID, id -> new MarkerSet("Geopolitica"));
+        }
+    }
+
+    @Override
     public void disable() {
         if (onEnable != null) {
             BlueMapAPI.unregisterListener(onEnable);

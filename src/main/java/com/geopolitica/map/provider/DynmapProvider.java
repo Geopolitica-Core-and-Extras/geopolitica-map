@@ -34,24 +34,45 @@ public class DynmapProvider implements MapProvider {
             return false;
         }
         this.plugin = plugin;
+        ensureMarkerSet();
+        return markerSet != null;
+    }
+
+    @Override
+    public void ensureLayers(GeopoliticaMapPlugin plugin) {
+        ensureMarkerSet();
+    }
+
+    /**
+     * Re-fetches (or, the first time, creates) the "Geopolitica" marker set
+     * rather than trusting the cached {@link #markerSet} field, so that this
+     * self-heals if Dynmap wasn't fully ready yet on the first attempt, or if
+     * an admin's {@code /dynmap reload} silently dropped our (non-persistent)
+     * set in the meantime.
+     */
+    private void ensureMarkerSet() {
+        Plugin dynmap = Bukkit.getPluginManager().getPlugin("dynmap");
+        if (dynmap == null || !dynmap.isEnabled()) {
+            return;
+        }
         try {
             DynmapAPI api = (DynmapAPI) dynmap;
             if (!api.markerAPIInitialized()) {
-                return false;
+                return;
             }
             MarkerAPI markerAPI = api.getMarkerAPI();
             if (markerAPI == null) {
-                return false;
+                return;
             }
             MarkerSet set = markerAPI.getMarkerSet(SET_ID);
             if (set == null) {
                 set = markerAPI.createMarkerSet(SET_ID, "Geopolitica", null, false);
             }
             this.markerSet = set;
-            return this.markerSet != null;
         } catch (Throwable t) {
-            plugin.getLogger().log(Level.WARNING, "Failed to hook into Dynmap", t);
-            return false;
+            if (plugin != null) {
+                plugin.getLogger().log(Level.WARNING, "Failed to hook into Dynmap", t);
+            }
         }
     }
 
@@ -69,6 +90,9 @@ public class DynmapProvider implements MapProvider {
 
     @Override
     public void upsertClaim(ClaimMarker marker) {
+        if (markerSet == null) {
+            ensureMarkerSet();
+        }
         if (markerSet == null) {
             return;
         }

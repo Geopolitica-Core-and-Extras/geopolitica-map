@@ -45,6 +45,21 @@ public class SquaremapProvider implements MapProvider {
     }
 
     @Override
+    public void ensureLayers(GeopoliticaMapPlugin plugin) {
+        Squaremap api = Bukkit.getServicesManager().load(Squaremap.class);
+        if (api == null) {
+            return;
+        }
+        // Registers (or leaves alone, if already present) the "Geopolitica" layer on
+        // every world squaremap currently has enabled - even ones with no claims yet -
+        // so the layer toggle is visible in the UI regardless of how many markers
+        // are actually drawn on it right now.
+        for (MapWorld world : api.mapWorlds()) {
+            ensureLayer(world);
+        }
+    }
+
+    @Override
     public void disable() {
         Squaremap api = Bukkit.getServicesManager().load(Squaremap.class);
         if (api == null) {
@@ -89,7 +104,6 @@ public class SquaremapProvider implements MapProvider {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private SimpleLayerProvider layerFor(String worldName) {
         org.bukkit.World bukkitWorld = Bukkit.getWorld(worldName);
         if (bukkitWorld == null) {
@@ -100,10 +114,12 @@ public class SquaremapProvider implements MapProvider {
             return null;
         }
         Optional<MapWorld> mapWorld = api.getWorldIfEnabled(BukkitAdapter.worldIdentifier(bukkitWorld));
-        if (mapWorld.isEmpty()) {
-            return null;
-        }
-        Registry<LayerProvider> registry = mapWorld.get().layerRegistry();
+        return mapWorld.map(this::ensureLayer).orElse(null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private SimpleLayerProvider ensureLayer(MapWorld mapWorld) {
+        Registry<LayerProvider> registry = mapWorld.layerRegistry();
         if (registry.hasEntry(LAYER_KEY)) {
             return (SimpleLayerProvider) registry.get(LAYER_KEY);
         }

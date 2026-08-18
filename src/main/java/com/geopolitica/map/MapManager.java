@@ -12,8 +12,10 @@ import com.geopolitica.api.town.Town;
 import com.geopolitica.map.config.MapConfig;
 import com.geopolitica.map.provider.ClaimMarker;
 import com.geopolitica.map.provider.MapProvider;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.world.WorldLoadEvent;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -86,7 +88,20 @@ public class MapManager implements Listener {
         if (providers.isEmpty()) {
             plugin.getLogger().info("No supported map plugin (Dynmap, BlueMap, squaremap, Pl3xMap) found; "
                     + "markers will be drawn automatically once one is installed and the plugin is reloaded.");
+            return;
         }
+
+        // The layer/marker-set toggle must appear even with zero claims, so it is
+        // created proactively here rather than only as a side effect of drawing a
+        // marker. Some map plugins (squaremap, Pl3xMap, BlueMap) finish setting up
+        // their own per-world state asynchronously/slightly after their onEnable()
+        // returns, so a single attempt right now can race and silently do nothing -
+        // hence the extra delayed retry below, on top of the one that already
+        // happens at the start of every periodic resync.
+        ensureLayers();
+        Bukkit.getScheduler().runTaskLater(plugin, this::ensureLayers, 40L);
+        Bukkit.getScheduler().runTaskLater(plugin, this::ensureLayers, 200L);
+
         resyncAll();
     }
 
@@ -105,11 +120,35 @@ public class MapManager implements Listener {
         return providers.stream().map(MapProvider::getName).toList();
     }
 
+    /**
+     * Re-runs every provider's proactive layer/marker-set registration. Cheap
+     * and idempotent, so it is called from several places (see {@link #enable()})
+     * purely for redundancy against the backing map plugins' own startup timing.
+     */
+    public void ensureLayers() {
+        for (MapProvider provider : providers) {
+            try {
+                provider.ensureLayers(plugin);
+            } catch (Throwable t) {
+                plugin.getLogger().log(Level.WARNING, "Error ensuring layers on " + provider.getName(), t);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onWorldLoad(WorldLoadEvent event) {
+        // A world that loads after startup (e.g. created by another plugin) has no
+        // layer registered on any provider yet - catch up immediately rather than
+        // waiting for the next periodic resync.
+        ensureLayers();
+    }
+
     /** Rebuilds every marker from Geopolitica's current state. Safe to call repeatedly. */
     public void resyncAll() {
         if (providers.isEmpty()) {
             return;
         }
+        ensureLayers();
         int count = 0;
         for (Town town : townService.getTowns()) {
             for (Claim claim : claimService.getClaims(town)) {
