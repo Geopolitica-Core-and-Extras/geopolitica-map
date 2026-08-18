@@ -1,0 +1,28 @@
+# Geopolitica Map configuration.
+# Every integration below is detected automatically - nothing here needs to
+# be touched on a server that only has one (or none) of these map plugins
+# installed. Change these only to fine-tune appearance or to explicitly
+# disable integrating with a map plugin you do have installed.
+
+providers:
+  dynmap: true
+  bluemap: true
+  squaremap: true
+  pl3xmap: true
+
+# How often (in seconds) to fully rebuild every marker from Geopolitica's
+# current state. This is what picks up town renames, color/description
+# edits, and state/nation reassignment, none of which have a dedicated
+# Geopolitica event to react to instantly. Claiming, unclaiming and town
+# disbandment are always reflected immediately regardless of this value.
+# Large servers with many claims may want to raise this.
+resync-interval-seconds: 300
+
+# Fill/stroke opacity applied to each town's claim color (0.0-1.0), and the
+# stroke (border) width in pixels.
+fill-opacity: 0.35
+stroke-opacity: 0.85
+stroke-weight: 2
+
+# The Y-height at which flat claim shapes are drawn on 3D maps (BlueMap).
+shape-height: 65

@@ -1,0 +1,10 @@
+com\geopolitica\map\GeopoliticaMapPlugin.class
+com\geopolitica\map\provider\SquaremapProvider.class
+com\geopolitica\map\provider\MapProvider.class
+com\geopolitica\map\provider\Pl3xMapProvider.class
+com\geopolitica\map\provider\DynmapProvider.class
+com\geopolitica\map\provider\ClaimMarker.class
+com\geopolitica\map\provider\BlueMapProvider.class
+com\geopolitica\map\command\MapCommand.class
+com\geopolitica\map\config\MapConfig.class
+com\geopolitica\map\MapManager.class

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.geopolitica</groupId>
+        <artifactId>geopolitica-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>geopolitica-map</artifactId>
+    <packaging>jar</packaging>
+    <name>Geopolitica Map</name>
+    <description>
+        Addon plugin that draws Geopolitica's towns as live, auto-updating claim
+        markers on Dynmap, BlueMap, squaremap and Pl3xMap. Consumes Geopolitica
+        purely through geopolitica-api, and hooks each web map plugin only if it
+        is actually installed - every integration is a soft dependency.
+    </description>
+
+    <properties>
+        <dynmap-api.version>3.8</dynmap-api.version>
+        <dynmap-core-api.version>3.8</dynmap-core-api.version>
+        <bluemap-api.version>2.7.2</bluemap-api.version>
+        <squaremap-api.version>1.3.15</squaremap-api.version>
+        <pl3xmap.version>26.2-554</pl3xmap.version>
+    </properties>
+
+    <repositories>
+        <!-- Dynmap's official lightweight API artifact, published specifically for third-party integrations like this one. -->
+        <repository>
+            <id>dynmap-repo</id>
+            <url>https://repo.mikeprimm.com/</url>
+        </repository>
+        <!-- BlueMap's official API artifact. -->
+        <repository>
+            <id>bluecolored-repo</id>
+            <url>https://repo.bluecolored.de/releases</url>
+        </repository>
+        <!-- Pl3xMap does not publish a separate API jar; addons compile against the full plugin jar (provided scope only, never shaded). -->
+        <repository>
+            <id>modrinth-repo</id>
+            <url>https://api.modrinth.com/maven</url>
+        </repository>
+        <!-- squaremap-api is on Maven Central; no extra repository needed. -->
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.geopolitica</groupId>
+            <artifactId>geopolitica-api</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>${spigot.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- All four map integrations are compile-time-only soft dependencies:
+             none of these classes are bundled into the plugin jar, and none are
+             touched at runtime unless the corresponding plugin is actually
+             installed and enabled (see the provider/ package). -->
+        <dependency>
+            <groupId>us.dynmap</groupId>
+            <artifactId>dynmap-api</artifactId>
+            <version>${dynmap-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Bukkit's DynmapAPI (above) extends DynmapCommonAPI, and the marker
+             classes (MarkerAPI, MarkerSet, AreaMarker, ...) also live here -
+             both artifacts are needed to compile against Dynmap's marker API. -->
+        <dependency>
+            <groupId>us.dynmap</groupId>
+            <artifactId>DynmapCoreAPI</artifactId>
+            <version>${dynmap-core-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.bluecolored.bluemap</groupId>
+            <artifactId>BlueMapAPI</artifactId>
+            <version>${bluemap-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>xyz.jpenilla</groupId>
+            <artifactId>squaremap-api</artifactId>
+            <version>${squaremap-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>maven.modrinth</groupId>
+            <artifactId>pl3xmap</artifactId>
+            <version>${pl3xmap.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>GeopoliticaMap-${project.version}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

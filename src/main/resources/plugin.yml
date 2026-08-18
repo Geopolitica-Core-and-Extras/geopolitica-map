@@ -1,0 +1,19 @@
+name: GeopoliticaMap
+version: '${project.version}'
+main: com.geopolitica.map.GeopoliticaMapPlugin
+api-version: '1.21'
+load: STARTUP
+authors: [Geopolitica]
+description: Draws Geopolitica's towns as live claim markers on Dynmap, BlueMap, squaremap and Pl3xMap.
+depend: [Geopolitica]
+softdepend: [dynmap, BlueMap, squaremap, Pl3xMap]
+
+commands:
+  gmap:
+    description: Manage Geopolitica's live map integration.
+    usage: /gmap <status|resync|reload>
+
+permissions:
+  geopolitica.map.admin:
+    description: Force a marker resync or reload Geopolitica Map's configuration.
+    default: op
